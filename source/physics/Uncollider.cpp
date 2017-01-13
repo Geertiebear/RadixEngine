@@ -1,8 +1,5 @@
 #include <radix/physics/Uncollider.hpp>
 
-#include <cmath>
-#include <utility>
-
 #include <bullet/BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 #include <radix/physics/PhysicsHelper.hpp>
@@ -34,7 +31,7 @@ void Uncollider::beforePhysicsStep() {
   if (volumes.size() > 0) {
     for (btCollisionObject *volume : volumes) {
       btVector3 ext = ((btBoxShape*)volume)->getHalfExtentsWithoutMargin();
-      world.getSystem<PhysicsSystem>().physicsWorld->getDebugDrawer()->drawBox(-ext, ext,
+      world.systems.get<PhysicsSystem>().physicsWorld->getDebugDrawer()->drawBox(-ext, ext,
         volume->getWorldTransform(), btVector3(1, .5, 0));
     }
   }

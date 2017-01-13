@@ -4,37 +4,40 @@
 #include <string>
 
 #include <radix/World.hpp>
-#include <radix/material/Material.hpp>
-#include <radix/shader/Shader.hpp>
-#include <radix/text/Font.hpp>
+#include <radix/data/material/Material.hpp>
+#include <radix/data/shader/Shader.hpp>
 #include <radix/core/math/Matrix4f.hpp>
-#include <radix/core/math/Vector4f.hpp>
 #include <radix/core/math/Rectangle.hpp>
 #include <radix/renderer/RenderContext.hpp>
 #include <radix/component/Transform.hpp>
+#include <radix/renderer/TextRenderer.hpp>
+#include <radix/renderer/SubRenderer.hpp>
 
 namespace radix {
 
-class Camera;
 class Entity;
-class Portal;
-struct Texture;
-class Font;
 struct Viewport;
 
 /** @class Renderer
- * @brief Low level graphics renderer.
+ * @brief Main renderer - handles sub-renderers and provides low level render functions.
  *
- * This is the low level graphics renderer
- * it is highly encouraged to move all
- * specialized code into sub-renderers.
+ * This class is responsible
+ * for all rendering. You push
+ * all of your sub-renderers
+ * into a renderer stack, and those
+ * sub-renderers then get invoked
+ * by one main render function.
+ *
+ * As well as that, it also provides
+ * low-level render functions to be
+ * used by specific renderers.
  */
 class Renderer {
 public:
   /**
-   * @param World The world to render
+   * @param world The world to render
    */
-  Renderer(World&);
+  Renderer(World& world);
 
   // TODO: possibly remove to make rendering viewport-stateless
   void setViewport(Viewport *vp) {
@@ -44,57 +47,29 @@ public:
     return viewport;
   }
 
-  /**
-   * Main scene rendering method. To be called only once per frame.
-   * @param dtime Time delta since last frame, in seconds
-   * @param cam The camera from which we look at the scene
-   */
-  void render(double dtime, const Camera &cam);
+  void init();
 
   /**
-   * Renders the scene with provided camera parameters
-   * @param cam The camera from which we look at the scene
+   * Initializes the lights in the world on the given shader
    */
-  void renderScene(RenderContext &rc);
-
-  void renderViewFrames(RenderContext &rc);
-  void renderViewFrameStencil(RenderContext &rc);
+  void updateLights(Shader& shader);
 
   /**
-   * Renders all the entities in the scene regardless of shading
-   * @param cam The camera from which we look at the scene
+   * Cycles through all the sub-renderers and calls their render function
    */
-  void renderEntities(RenderContext &rc);
-
-  /**
-   * Renders a single entity regardless of shading
-   * @param cam The camera from which we look at the entity
-   * @param e   The entity to render
-   */
-  void renderEntity(RenderContext &rc, const Entity &e);
-
-  /**
-   * Renders the player character using ambient shading
-   * @param cam The camera from which we look at the player
-   */
-  void renderPlayer(RenderContext &rc);
-
+  void render();
 
   /**
    * Renders a string to the screen using signed-distance field text rendering.
-   * The text is rendered in the font that is currently set with setFont().
-   * @param cam  The camera from which we look at the text
    * @param text The text to render
-   * @param x    The x-coordinate of the top left corner of the text in window coordinates
-   * @param y    The y-coordinate of the top left corner of the text in window coordinates
    */
-  void renderText(RenderContext &rc, const std::string &text, Vector3f vector);
+   void renderText(RenderContext &rc, Text text);
 
 
   /**
    * Renders a mesh with the specified material and transform determined by the
    * given modelMatrix.
-   * @param cam    The camera from which we look at the mesh
+   * @param rc     RenderContext
    * @param shader Shader to use to render the mesh
    * @param mdlMtx The model matrix determining the position, rotation and scale of the mesh
    * @param mesh   The mesh to render
@@ -109,14 +84,15 @@ public:
   }
 
   /**
-   * Set the camera in the portal so rendering from that portal is possible
-   * @param cam         The camera from which we look at the portal
-   * @param dest        The camera to move inside the portal and point in the right direction
-   * @param portal      The portal in which to place the camera
-   * @param otherPortal The counterpart of the portal
+   * Add a renderer to the render queue
    */
-  static void setCameraInPortal(const Camera &cam, Camera &dest, const Entity &portal,
-                         const Entity &otherPortal);
+  void addRenderer(SubRenderer& subRenderer);
+
+  /**
+   * Remove a renderer from the render queue
+   */
+  void removeRenderer(SubRenderer& subRenderer);
+
   static Matrix4f getFrameView(const Matrix4f &src, const Matrix4f &in, const Matrix4f &out);
   static Matrix4f getFrameView(const Matrix4f &src, const Transform &in, const Transform &out) {
     Matrix4f inMat;
@@ -130,38 +106,22 @@ public:
   static bool clipViewFrame(const RenderContext &rc, const Mesh &frame,
     const Transform &frameTform, RectangleI &scissor);
 
-
-  /**
-   * Sets the font to use for all future text drawing until changed again
-   * @param font Name of the font
-   * @param size Size of the text drawn with this font
-   */
-  void setFont(const std::string &font, float size);
-
-  void setFontSize(float size);
-
-  void setFontColor(const Vector4f color);
-
-  /**
-   * Meassures the width of text respecting the current font
-   * @param text
-   * @return Width in pixels
-   */
-  int getTextWidth(std::string text);
   static Matrix4f clipProjMat(const Entity &ent, const Matrix4f &view, const Matrix4f &proj);
 
 private:
   struct Support {
     bool uniformBuffers;
   } support;
+
   uint lightsUBO;
+
   World &world;
   Viewport *viewport;
-  int vpWidth, vpHeight;
-  double time;
-  Vector4f fontColor;
-  Font *font;
   RenderContext rc;
+  TextRenderer textRenderer;
+
+  std::vector<SubRenderer*> subRenderers;
+  int vpWidth, vpHeight;
 };
 
 } /* namespace radix */

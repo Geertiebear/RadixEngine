@@ -1,17 +1,15 @@
 #include <radix/env/Config.hpp>
 
-#include <string>
-#include <cstring> // std::strerror
+#include <cstring>
 #include <fstream>
-#include <stdexcept>
-
-#include <json11/json11.hpp>
 
 #include <radix/env/Environment.hpp>
 
-using namespace json11;
-
 namespace radix {
+
+Config::Config() : loaded(false), ignoreGlVersion(false) {
+}
+
 
 void Config::load() {
   std::string err;
@@ -29,24 +27,60 @@ void Config::load() {
                              templatePath + ": " +
                              std::strerror(errno));
   }
-  Json templateJson = Json::parse(templateTxt, err);
-  Json videoJson = templateJson["video"];
-  fullscreen   = videoJson["fullscreen"].bool_value();
-  antialiasing = videoJson["antialiasing"].number_value();
-  vsync        = videoJson["vsync"].bool_value();
-  width        = videoJson["width"].number_value();
-  height       = videoJson["height"].number_value();
-  recursive_portal = videoJson["recursive_portal"].number_value();
+  Json configJson = Json::parse(templateTxt, err);
 
-  sound        = templateJson["sound"]["enabled"].bool_value();
+  this->loadVideoSettings(configJson["video"]);
+  this->loadSoundSettings(configJson["sound"]);
+  this->loadMouseSettings(configJson["mouse"]);
+  this->loadLoglevelSettings(configJson["logging"]);
 
-  sensitivity  = templateJson["mouse"]["sensitivity"].number_value();
-  hide_portals_by_click = templateJson["mouse"]["hide_portals_by_click"].bool_value();
-  cursorVisibility = templateJson["mouse"]["cursor_visibility"].bool_value();
-
-  // TODO: get rid of this. Default map isn't part of the whole game config,
-  // it's part of a mappack config.
+  // Misc
   map = "n1";
+  loaded = true;
+}
+
+bool Config::isLoaded() {
+  return loaded;
+}
+
+void Config::loadVideoSettings(Json json) {
+  fullscreen      = json["fullscreen"].bool_value();
+  antialiasing    = json["antialiasing"].number_value();
+  vsync           = json["vsync"].bool_value();
+  width           = json["width"].number_value();
+  height          = json["height"].number_value();
+  recursivePortal = json["recursive_portal"].number_value();
+
+}
+
+void Config::loadSoundSettings(Json json) {
+  sound = json["enabled"].bool_value();
+
+}
+
+void Config::loadMouseSettings(Json json) {
+  sensitivity        = json["sensitivity"].number_value();
+  hidePortalsByClick = json["hide_portals_by_click"].bool_value();
+  cursorVisibility   = json["cursor_visibility"].bool_value();
+}
+
+void Config::loadLoglevelSettings(Json json) {
+  std::string value = json["loglevel"].string_value();
+  if (value == "verbose") {
+    loglevel = LogLevel::Verbose;
+  } else if (value == "debug") {
+    loglevel = LogLevel::Debug;
+  } else if (value == "info") {
+    loglevel = LogLevel::Info;
+  } else if (value == "warning") {
+    loglevel = LogLevel::Warning;
+  } else if (value == "error") {
+    loglevel = LogLevel::Error;
+  } else if (value == "failure") {
+    loglevel = LogLevel::Failure;
+  } else {
+    loglevel = LogLevel::Debug;
+  }
 }
 
 } /* namespace radix */

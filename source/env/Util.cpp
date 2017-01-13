@@ -2,8 +2,8 @@
 
 #include <thread>
 
-#include <SDL2/SDL_platform.h>
-
+#include <radix/env/Environment.hpp>
+#include <radix/env/OperatingSystem.hpp>
 #include <radix/core/diag/AnsiConsoleLogger.hpp>
 #include <radix/core/diag/StdoutLogger.hpp>
 
@@ -19,7 +19,7 @@
     DWORD dwFlags; // Reserved for future use, must be zero.
   } THREADNAME_INFO;
   #pragma pack(pop)
-#else
+#elif __linux__
   #include <sys/prctl.h>
 #endif
 
@@ -32,7 +32,7 @@ std::random_device Util::RandDev;
 std::mt19937 Util::Rand(Util::RandDev());
 
 void Util::Init() {
-  if (std::string("Linux") == SDL_GetPlatform()) {
+  if (OperatingSystem::IsLinux()) {
     logger.reset(new AnsiConsoleLogger);
   } else {
     logger.reset(new StdoutLogger);
@@ -40,7 +40,7 @@ void Util::Init() {
 }
 
 LogInput Util::_Log::operator()() {
-  return LogInput(*Util::logger, LogLevel::Debug);
+  return LogInput(*Util::logger, Environment::getConfig().getLoglevel());
 }
 
 LogInput Util::_Log::operator()(LogLevel lvl) {
@@ -70,6 +70,10 @@ static void SetThreadName(uint32_t dwThreadID, const char **threadName) {
 void Util::SetThreadName(std::thread &thread, const char *name) {
   DWORD threadId = ::GetThreadId(static_cast<HANDLE>(thread->native_handle()));
   SetThreadName(threadId,threadName);
+}
+#elif __APPLE__
+void Util::SetThreadName(std::thread &thread, const char *name) {
+  pthread_setname_np(name);
 }
 #else
 void Util::SetThreadName(std::thread &thread, const char *name) {

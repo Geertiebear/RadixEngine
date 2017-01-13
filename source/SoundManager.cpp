@@ -1,7 +1,5 @@
 #include <radix/SoundManager.hpp>
 
-#include <cstdio>
-
 #include <SDL2/SDL.h>
 
 namespace radix {
@@ -151,4 +149,4 @@ void SoundManager::reload() {
   SoundManager::init();
 }
 
-}
+} /* namespace radix */

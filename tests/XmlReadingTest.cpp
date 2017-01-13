@@ -1,7 +1,7 @@
 #include <UnitTest++.h>
 #include <tinyxml2.h>
 #include <radix/core/math/Vector3f.hpp>
-#include <radix/map/XmlHelper.hpp>
+#include <radix/data/map/XmlHelper.hpp>
 #include <stdexcept>
 
 using namespace radix;
@@ -22,11 +22,11 @@ struct XmlReadingFixtures
     lightElement->SetAttribute("y", sourceVector.y);
     lightElement->SetAttribute("z", sourceVector.z);
   }
-  
+
   ~XmlReadingFixtures() {}
-  
+
 };
- 
+
 
 SUITE(XmlReading)
 {

@@ -26,10 +26,7 @@ what we need.
 #include <bullet/LinearMath/btIDebugDraw.h>
 #include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h>
-#include <bullet/BulletCollision/BroadphaseCollision/btOverlappingPairCache.h>
 #include <bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
-#include <bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h>
-#include <bullet/LinearMath/btDefaultMotionState.h>
 
 #include <radix/physics/KinematicCharacterController.hpp>
 #include <radix/physics/Uncollider.hpp>
@@ -698,7 +695,7 @@ bool KinematicCharacterController::canJump() const {
   return onGround();
 }
 
-void KinematicCharacterController::jump() {
+void KinematicCharacterController::jump(const btVector3& dir) {
   if (not canJump()) {
     return;
   }
@@ -715,37 +712,31 @@ btScalar KinematicCharacterController::getGravity() const {
   return m_gravity;
 }
 
-void KinematicCharacterController::setMaxSlope(btScalar slopeRadians)
-{
+void KinematicCharacterController::setMaxSlope(btScalar slopeRadians) {
   m_maxSlopeRadians = slopeRadians;
   m_maxSlopeCosine = btCos(slopeRadians);
 }
 
-btScalar KinematicCharacterController::getMaxSlope() const
-{
+btScalar KinematicCharacterController::getMaxSlope() const {
   return m_maxSlopeRadians;
 }
 
-bool KinematicCharacterController::onGround () const
-{
+bool KinematicCharacterController::onGround() const {
   return m_verticalVelocity == 0.0 && m_verticalOffset == 0.0;
 }
 
 
-btVector3* KinematicCharacterController::getUpAxisDirections()
-{
+btVector3* KinematicCharacterController::getUpAxisDirections() {
   static btVector3 sUpAxisDirection[3] =
     { btVector3(1.0f, 0.0f, 0.0f), btVector3(0.0f, 1.0f, 0.0f), btVector3(0.0f, 0.0f, 1.0f) };
 
   return sUpAxisDirection;
 }
 
-void KinematicCharacterController::debugDraw(btIDebugDraw* debugDrawer)
-{
+void KinematicCharacterController::debugDraw(btIDebugDraw* debugDrawer) {
 }
 
-void KinematicCharacterController::setUpInterpolate(bool value)
-{
+void KinematicCharacterController::setUpInterpolate(bool value) {
   m_interpolateUp = value;
 }
 

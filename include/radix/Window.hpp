@@ -12,11 +12,13 @@
 
 #include <radix/input/InputSource.hpp>
 #include <radix/Viewport.hpp>
+#include <radix/env/Config.hpp>
+#include <radix/core/math/Vector2i.hpp>
 
 namespace radix {
 
 class GlGwenRenderer;
-class GWENInput;  
+class GWENInput;
 
 class Window : public Viewport, public InputSource {
 public:
@@ -24,6 +26,7 @@ public:
   ~Window();
   void create(const char*);
   void setFullscreen();
+  void setConfig(radix::Config &config);
   void swapBuffers();
   void getSize(int *width, int *height) const;
   void close();
@@ -35,6 +38,7 @@ public:
   std::unique_ptr<Gwen::Skin::TexturedBase> gwenSkin;
   std::unique_ptr<Gwen::Controls::Canvas> gwenCanvas;
   std::unique_ptr<radix::GWENInput> gwenInput;
+  radix::Config config;
 
   void processEvents();
 
@@ -46,11 +50,15 @@ public:
   void clearBuffer();
   void truncateCharBuffer();
   void clear();
-  
+  void printScreenToFile(std::string fileName);
+  SDL_Surface* flipVertical(SDL_Surface* sfc);
 private:
+  Vector2i getWindowDimensions();
+  void processMouseButtonEvents(SDL_Event &event);
+  void processWindowEvents(SDL_Event &event);
   void initEpoxy();
-  int width;
-  int height;
+  unsigned int width;
+  unsigned int height;
   SDL_Window *window;
   SDL_GLContext context;
 
@@ -58,7 +66,7 @@ private:
   std::string charbuffer;
 
   static const char* DEFAULT_TITLE;
-  static const int DEFAULT_WIDTH, DEFAULT_HEIGHT;
+  static const unsigned int DEFAULT_WIDTH, DEFAULT_HEIGHT;
 };
 
 } /* namespace radix */

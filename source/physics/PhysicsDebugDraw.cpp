@@ -1,7 +1,7 @@
 #include <radix/physics/PhysicsDebugDraw.hpp>
 
-#include <radix/shader/ShaderLoader.hpp>
-#include <radix/texture/TextureLoader.hpp>
+#include <radix/data/shader/ShaderLoader.hpp>
+#include <radix/data/texture/TextureLoader.hpp>
 #include <radix/env/Util.hpp>
 
 namespace radix {
@@ -54,7 +54,7 @@ void PhysicsDebugDraw::render(const Camera &cam) {
     vbo = std::make_unique<VBO>(12*4*sizeof(PtData));
   }
   Shader &sh = ShaderLoader::getShader("unshaded.frag");
-  glUseProgram(sh.handle);
+  sh.bind();
   Matrix4f projMatrix; cam.getProjMatrix(projMatrix);
   glUniformMatrix4fv(sh.uni("projectionMatrix"), 1, false, projMatrix.toArray());
   Matrix4f viewMatrix; cam.getViewMatrix(viewMatrix);
@@ -78,6 +78,7 @@ void PhysicsDebugDraw::render(const Camera &cam) {
   glEnableVertexAttribArray(4);
   glDrawArrays(GL_LINES, 0, points.size());
   points.clear();
+  sh.release();
 }
 
 } /* namespace radix */
